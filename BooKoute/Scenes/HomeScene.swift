@@ -5,26 +5,48 @@ struct HomeScene: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                ForEach(vm.filteredNotes) { note in
-                    NavigationLink(value: note) {
-                        NoteRowView(note: note)
-                    }
-                    .contextMenu {
-                        Button("編集") {
-                            vm.presentedEditorNote = note
-                            vm.isPresentingEditor = true
-                        }
-                        Button(role: .destructive) {
-                            if let idx = vm.notes.firstIndex(of: note) {
-                                vm.notes.remove(at: idx)
+            Group {
+                if vm.filteredNotes.isEmpty {
+                    ContentUnavailableView(
+                        "メモがありません",
+                        systemImage: "note.text",
+                        description: Text("右上の＋から作成してください")
+                    )
+                } else {
+                    List {
+                        ForEach(vm.filteredNotes) { note in
+                            NavigationLink(value: note) {
+                                NoteRowView(note: note)
                             }
-                        } label: { Text("削除") }
+                            .swipeActions {
+                                Button {
+                                    vm.presentedEditorNote = note
+                                    vm.isPresentingEditor = true
+                                } label: { Label("編集", systemImage: "pencil") }
+
+                                Button(role: .destructive) {
+                                    if let idx = vm.notes.firstIndex(of: note) {
+                                        vm.notes.remove(at: idx)
+                                    }
+                                } label: { Label("削除", systemImage: "trash") }
+                            }
+                            .contextMenu {
+                                Button("編集") {
+                                    vm.presentedEditorNote = note
+                                    vm.isPresentingEditor = true
+                                }
+                                Button(role: .destructive) {
+                                    if let idx = vm.notes.firstIndex(of: note) {
+                                        vm.notes.remove(at: idx)
+                                    }
+                                } label: { Text("削除") }
+                            }
+                        }
+                        .onDelete(perform: vm.delete)
                     }
+                    .searchable(text: $vm.searchText, placement: .navigationBarDrawer(displayMode: .always))
                 }
-                .onDelete(perform: vm.delete)
             }
-            .searchable(text: $vm.searchText, placement: .navigationBarDrawer(displayMode: .always))
             .navigationTitle("BooKoute")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -37,15 +59,15 @@ struct HomeScene: View {
                     }
                 }
             }
-            .navigationDestination(for: Note.self) { note in
-                NoteDetailView(
-                    note: note,
-                    onEdit: {
-                        vm.presentedEditorNote = note
-                        vm.isPresentingEditor = true
-                    }
-                )
-            }
+        }
+        .navigationDestination(for: Note.self) { note in
+            NoteDetailView(
+                note: note,
+                onEdit: {
+                    vm.presentedEditorNote = note
+                    vm.isPresentingEditor = true
+                }
+            )
         }
         .sheet(isPresented: $vm.isPresentingEditor) {
             if let target = vm.presentedEditorNote {

@@ -1,18 +1,22 @@
-//
-//  NoteRowView.swift
-//  BooKoute
-//
-//  Created by sato kenji on 2025/08/19.
-//
-
 import SwiftUI
 
 struct NoteRowView: View {
-    var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
-    }
-}
+    let note: Note
 
-#Preview {
-    NoteRowView()
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(note.title.isEmpty ? "（無題）" : note.title)
+                .font(.headline)
+            if !note.quote.isEmpty {
+                Text(note.quote)
+                    .lineLimit(2)
+                    .font(.subheadline)
+            }
+            if let a = note.author, !a.isEmpty {
+                Text(a)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
 }

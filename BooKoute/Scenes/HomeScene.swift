@@ -4,38 +4,51 @@ struct HomeScene: View {
     @StateObject private var vm = HomeViewModel()
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 12) {
-
-                // リスト or 空表示
-                if vm.filtered.isEmpty {
-                    ContentUnavailableView(
-                        "メモはまだありません",
-                        systemImage: "book.closed",
-                        description: Text("右上の＋で追加できます")
-                    )
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else {
-                    List(vm.filtered) { note in
+        NavigationStack(path: Binding(
+            get: { vm.routeSelection.map { [$0] } ?? [] },
+            set: { vm.routeSelection = $0.first }
+        )) {
+            List {
+                ForEach(vm.filteredNotes) { note in
+                    Button { vm.routeSelection = note } label: {
                         NoteRowView(note: note)
                     }
-                    .listStyle(.inset)
+                    .swipeActions {
+                        Button(role: .destructive) { vm.delete(note) } label: {
+                            Label("削除", systemImage: "trash")
+                        }
+                        Button { vm.startEdit(note) } label: {
+                            Label("編集", systemImage: "pencil")
+                        }
+                    }
+                }
+                .onDelete { idx in
+                    for i in idx { vm.delete(vm.filteredNotes[i]) }
                 }
             }
+            .searchable(text: $vm.searchText, placement: .navigationBarDrawer, prompt: "検索（タイトル/書名/引用/タグ）")
             .navigationTitle("BooKoute")
-            // 🔍 検索バー（iOS標準UI）
-            .searchable(
-                text: $vm.query,
-                placement: .navigationBarDrawer(displayMode: .always),
-                prompt: "本・メモを検索"
-            )
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
-                    Button(action: { vm.addDummy() }) {
-                        Image(systemName: "plus")
+                    Button { vm.startCreate() } label: {
+                        Label("追加", systemImage: "plus.circle.fill")
                     }
-                    .accessibilityLabel("メモを追加")
                 }
+            }
+            .sheet(isPresented: $vm.isPresentingEditor) {
+                if let editing = vm.editingNote {
+                    NoteEditorView(note: editing) { vm.finishEditing($0) }
+                }
+            }
+            .navigationDestination(for: Note.self) { note in
+                NoteDetailView(
+                    note: note,
+                    onEdit: { vm.startEdit($0) },
+                    onDelete: {
+                        vm.delete($0)
+                        vm.routeSelection = nil
+                    }
+                )
             }
         }
     }

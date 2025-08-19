@@ -7,25 +7,31 @@ struct DetailNoteView: View {
 
     var body: some View {
         Group {
-            if let note = vm.note(id: noteID) {
+            if let note = vm.notes.first(where: { $0.id == noteID }) {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text(note.title).font(.title.bold())
-                        Text(note.body).font(.body)
+                        Text(note.title)
+                            .font(.title.bold())
+                        Text(note.body)
+                            .font(.body)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding()
                 }
                 .navigationTitle("詳細")
                 .toolbar {
-                    Button("編集") { showEdit = true }
+                    ToolbarItem(placement: .primaryAction) {
+                        Button("編集") { showEdit = true }
+                    }
                 }
                 .sheet(isPresented: $showEdit) {
-                    NavigationStack {
-                        EditNoteView(note: note) { updated in
+                    NoteEditorView(
+                        note: note,
+                        onSave: { updated in
                             vm.update(updated)
-                        }
-                    }
+                        },
+                        onCancel: {}
+                    )
                 }
             } else {
                 Text("見つかりませんでした")

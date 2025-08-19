@@ -1,18 +1,32 @@
-//
-//  EditNoteView.swift
-//  BooKoute
-//
-//  Created by sato kenji on 2025/08/19.
-//
-
 import SwiftUI
-
-struct EditNoteView: View {
-    var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
-    }
+enum NoteEditorResult {
+    case saved(Note)
+    case cancelled
 }
+struct EditNoteView: View {
+    @Environment(\.dismiss) private var dismiss
+    @State private var draft: Note
+    let onSave: (Note) -> Void
 
-#Preview {
-    EditNoteView()
+    init(note: Note, onSave: @escaping (Note) -> Void) {
+        _draft = State(initialValue: note)
+        self.onSave = onSave
+    }
+
+    var body: some View {
+        Form {
+            TextField("タイトル", text: $draft.title)
+            TextEditor(text: $draft.body)
+                .frame(minHeight: 240)
+        }
+        .navigationTitle("編集")
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button("保存") {
+                    onSave(draft)
+                    dismiss()
+                }
+            }
+        }
+    }
 }

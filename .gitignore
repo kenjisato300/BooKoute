@@ -8,3 +8,8 @@ build/
 # Xcode user data
 *.xcuserstate
 *.xcuserdata/
+
+# Xcode workspace/user data (追加)
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+xcuserdata/
